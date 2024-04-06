@@ -157,11 +157,14 @@ public class ArrayDeque<E> implements Deque<E> {
      */
     @SuppressWarnings("unchecked")
     private void resize(int capacity) {
+        //Change size to data.length because the code was trying to increment to size
+        //which was one more than the last index of the array.
+
         E[] newData = (E[]) new Object[capacity];
-        int i = increment(front, size);
+        int i = increment(front, data.length); //Changed it from size to the length of the array
         for (int newIndex = 0; newIndex < size; newIndex += 1) {
             newData[newIndex] = data[i];
-            i = increment(i, size);
+            i = increment(i, data.length); //Changed from size to the length of the array
         }
         front = newData.length - 1;
         back = size;
