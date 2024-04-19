@@ -1,6 +1,7 @@
 package autocomplete;
 
 import java.util.Collection;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -24,13 +25,81 @@ public class TernarySearchTreeAutocomplete implements Autocomplete {
     @Override
     public void addAll(Collection<? extends CharSequence> terms) {
         // TODO: Replace with your code
-        throw new UnsupportedOperationException("Not implemented yet");
+        for (CharSequence term: terms) {
+            put(term);
+        }
     }
 
     @Override
     public List<CharSequence> allMatches(CharSequence prefix) {
         // TODO: Replace with your code
-        throw new UnsupportedOperationException("Not implemented yet");
+        List<CharSequence> result = new ArrayList<>();
+        if (prefix == null || prefix.length() == 0) {
+            return result;
+        }
+        Node node = get(overallRoot, prefix, 0);
+
+        if (node != null) {
+            if (node.isTerm) {
+                result.add(prefix);
+            }
+            collect(node.mid, new StringBuilder(prefix), result);
+        }
+        return result;
+    }
+
+    public void put(CharSequence term) {
+        if (term == null || term.length() == 0) {
+            return;
+        }
+        overallRoot = put(overallRoot, term, 0);
+    }
+
+    private Node put(Node node, CharSequence prefix, int index) {
+        char c = prefix.charAt(index);
+        if (node == null) {
+            node = new Node(c);
+        }
+        if (c < node.data) {
+            node.left  = put(node.left, prefix, index);
+        } else if (c > node.data) {
+            node.right = put(node.right, prefix, index);
+        } else if (index < prefix.length() - 1) {
+            node.mid = put(node.mid, prefix, index+1);
+        } else {
+            node.isTerm = true;
+        }
+        return node;
+    }
+
+    private Node get(Node node, CharSequence prefix, int index) {
+        if (node == null) {
+            return null;
+        }
+
+        char c = prefix.charAt(index);
+        if (c < node.data) {
+            return get(node.left, prefix, index);
+        } else if (c > node.data)  {
+            return get(node.right, prefix, index);
+        } else if (index < prefix.length() - 1) {
+            return get(node.mid, prefix, index+1);
+        } else {
+            return node;
+        }
+    }
+
+    private void collect(Node node, StringBuilder prefix, List<CharSequence> result) {
+        if (node == null) {
+            return;
+        }
+        collect(node.left, prefix, result);
+        if (node.isTerm) {
+            result.add(prefix.toString() + node.data);
+        }
+        collect(node.mid, prefix.append(node.data), result);
+        prefix.deleteCharAt(prefix.length() - 1);
+        collect(node.right, prefix, result);
     }
 
     /**

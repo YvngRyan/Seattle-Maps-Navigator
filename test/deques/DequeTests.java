@@ -289,12 +289,12 @@ public abstract class DequeTests {
                 for (int i = 0; i < NUM_TRIALS; i += 1) {
                     // Measure the time to add one more integer
                     long addStart = System.nanoTime();
-                    deque.addLast(size);
+                    deque.addFirst(size);
                     long addTime = System.nanoTime() - addStart;
                     // Add to total time
                     totalAddTime += addTime;
                     // Remove the just-added integer
-                    deque.removeLast();
+                    deque.removeFirst();
                 }
 
                 // Output the averages to 10 decimal places.
