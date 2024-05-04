@@ -8,6 +8,10 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
+import java.util.*;
+
+import minpq.MinPQ;
+import minpq.OptimizedHeapMinPQ;
 
 /**
  * Display the most commonly-reported WCAG recommendations.
@@ -37,7 +41,30 @@ public class ReportAnalyzer {
                 .map(MatchResult::group)
                 .toList();
 
-        // TODO: Display the most commonly-reported WCAG recommendations using MinPQ
-        throw new UnsupportedOperationException();
+        Map<String, Integer> tagCounts = new HashMap<>();
+        for (String tag : wcagTags) {
+            tagCounts.put(tag, tagCounts.getOrDefault(tag, 0) + 1);
+        }
+
+        // Create a MinPQ to store the top 3 most commonly-reported WCAG tags
+        MinPQ<String> tagCountPQ = new OptimizedHeapMinPQ<>();
+        for (Map.Entry<String, Integer> entry : tagCounts.entrySet()) {
+            String tag = entry.getKey();
+            int count = entry.getValue();
+            tagCountPQ.addOrChangePriority(tag, -count);
+
+            if (tagCountPQ.size() > 3) {
+                tagCountPQ.removeMin();
+            }
+        }
+
+        // Retrieve and display the top 3 WCAG tags
+        List<String> topTags = tagCountPQ.removeMin(3);
+        Collections.reverse(topTags);
+
+        System.out.println("Top 3 WCAG Tags:");
+        for (String tag : topTags) {
+            System.out.println(wcagDefinitions.get(tag));
+        }
     }
 }
