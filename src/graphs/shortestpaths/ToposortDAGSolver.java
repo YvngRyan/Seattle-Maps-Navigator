@@ -2,6 +2,8 @@ package graphs.shortestpaths;
 
 import graphs.Edge;
 import graphs.Graph;
+import minpq.DoubleMapMinPQ;
+import minpq.MinPQ;
 
 import java.util.*;
 
@@ -24,8 +26,20 @@ public class ToposortDAGSolver<V> implements ShortestPathSolver<V> {
     public ToposortDAGSolver(Graph<V> graph, V start) {
         edgeTo = new HashMap<>();
         distTo = new HashMap<>();
-        // TODO: Replace with your code
-        throw new UnsupportedOperationException("Not implemented yet");
+
+        edgeTo.put(start, null);
+        distTo.put(start, 0.0);
+
+        List<V> postOrder = new ArrayList<>();
+        Set<V> visited = new HashSet<>();
+        dfsPostOrder(graph, start, visited, postOrder);
+
+        Collections.reverse(postOrder);
+        for (V vertex : postOrder) {
+            for (Edge<V> edge : graph.neighbors(vertex)) {
+                relax(edge);
+            }
+        }
     }
 
     /**
@@ -37,8 +51,29 @@ public class ToposortDAGSolver<V> implements ShortestPathSolver<V> {
      * @param result  the destination for adding nodes.
      */
     private void dfsPostOrder(Graph<V> graph, V start, Set<V> visited, List<V> result) {
-        // TODO: Replace with your code
-        throw new UnsupportedOperationException("Not implemented yet");
+        if (visited.contains(start)) return;
+        visited.add(start);
+
+        for (Edge<V> edge : graph.neighbors(start)) {
+            V neighbor = edge.to;
+            if (!visited.contains(neighbor)) {
+                dfsPostOrder(graph, neighbor, visited, result);
+            }
+        }
+
+        result.add(start);
+
+    }
+
+    private void relax(Edge<V> edge) {
+        V from = edge.from;
+        V to = edge.to;
+        double weight = edge.weight;
+
+        if (!distTo.containsKey(to) || distTo.get(from) + weight < distTo.get(to)) {
+            distTo.put(to, distTo.get(from) + weight);
+            edgeTo.put(to, edge);
+        }
     }
 
     @Override

@@ -9,6 +9,7 @@ import java.util.Scanner;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 import java.util.*;
+import minpq.UnsortedArrayMinPQ;
 
 import minpq.MinPQ;
 import minpq.OptimizedHeapMinPQ;
@@ -42,29 +43,36 @@ public class ReportAnalyzer {
                 .toList();
 
         Map<String, Integer> tagCounts = new HashMap<>();
+
         for (String tag : wcagTags) {
-            tagCounts.put(tag, tagCounts.getOrDefault(tag, 0) + 1);
+            tagCounts.put(tag, tagCounts.getOrDefault(tag, 1) + 1);
         }
 
-        // Create a MinPQ to store the top 3 most commonly-reported WCAG tags
-        MinPQ<String> tagCountPQ = new OptimizedHeapMinPQ<>();
-        for (Map.Entry<String, Integer> entry : tagCounts.entrySet()) {
-            String tag = entry.getKey();
-            int count = entry.getValue();
-            tagCountPQ.addOrChangePriority(tag, -count);
+        UnsortedArrayMinPQ<String> pq = new UnsortedArrayMinPQ<>();
 
-            if (tagCountPQ.size() > 3) {
-                tagCountPQ.removeMin();
+        for (Map.Entry<String, Integer> tag : tagCounts.entrySet()) {
+            if (pq.contains(tag.getKey())) {
+                pq.changePriority(tag.getKey(), -tag.getValue());
+            } else {
+                if (pq.size() < 3) {
+                    pq.add(tag.getKey(), -tag.getValue());
+                } else if (-tag.getValue() > pq.getPriority(pq.peekMin())) {
+                    pq.removeMin();
+                    pq.add(tag.getKey(), -tag.getValue());
+                }
             }
         }
 
-        // Retrieve and display the top 3 WCAG tags
-        List<String> topTags = tagCountPQ.removeMin(3);
-        Collections.reverse(topTags);
+        List<String> topTags = new ArrayList<>();
+        while (!pq.isEmpty()) {
+            topTags.add(pq.removeMin());
+        }
 
-        System.out.println("Top 3 WCAG Tags:");
+        Collections.reverse(topTags);
+        int i = 0;
         for (String tag : topTags) {
-            System.out.println(wcagDefinitions.get(tag));
+            i++;
+            System.out.println(i + ". " + wcagDefinitions.get(tag));
         }
     }
 }
