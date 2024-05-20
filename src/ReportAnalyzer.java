@@ -42,37 +42,35 @@ public class ReportAnalyzer {
                 .map(MatchResult::group)
                 .toList();
 
+        // Count the occurrences of each WCAG tag
         Map<String, Integer> tagCounts = new HashMap<>();
-
         for (String tag : wcagTags) {
-            tagCounts.put(tag, tagCounts.getOrDefault(tag, 1) + 1);
+            tagCounts.put(tag, tagCounts.getOrDefault(tag, 0) + 1);
         }
+        //System.out.println(tagCounts);
 
-        UnsortedArrayMinPQ<String> pq = new UnsortedArrayMinPQ<>();
+        // Create a MinPQ to store the top 3 most commonly-reported WCAG tags
+        MinPQ<String> tagCountPQ = new OptimizedHeapMinPQ<>();
+        for (Map.Entry<String, Integer> entry : tagCounts.entrySet()) {
+            String tag = entry.getKey();
+            int count = entry.getValue();
+            tagCountPQ.addOrChangePriority(tag, count);
 
-        for (Map.Entry<String, Integer> tag : tagCounts.entrySet()) {
-            if (pq.contains(tag.getKey())) {
-                pq.changePriority(tag.getKey(), -tag.getValue());
-            } else {
-                if (pq.size() < 3) {
-                    pq.add(tag.getKey(), -tag.getValue());
-                } else if (-tag.getValue() > pq.getPriority(pq.peekMin())) {
-                    pq.removeMin();
-                    pq.add(tag.getKey(), -tag.getValue());
-                }
+            if (tagCountPQ.size() > 3) {
+                tagCountPQ.removeMin();
             }
         }
 
+        // Retrieve and display the top 3 WCAG tags
         List<String> topTags = new ArrayList<>();
-        while (!pq.isEmpty()) {
-            topTags.add(pq.removeMin());
+        while (!tagCountPQ.isEmpty()) {
+            topTags.add(tagCountPQ.removeMin());
         }
-
         Collections.reverse(topTags);
-        int i = 0;
+
+        System.out.println("Top 3 WCAG Tags:");
         for (String tag : topTags) {
-            i++;
-            System.out.println(i + ". " + wcagDefinitions.get(tag));
+            System.out.println(wcagDefinitions.get(tag) + " (" + tagCounts.get(tag) + " occurrences)");
         }
     }
 }
